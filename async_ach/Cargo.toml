@@ -1,0 +1,13 @@
+[package]
+authors = ["rise0chen <rise0chen@163.com>"]
+categories = ["concurrency"]
+description = "Async Atomic Channel"
+edition = "2018"
+keywords = ["atomic", "channel", "no-heap"]
+license-file = "LICENSE"
+name = "async_ach"
+readme = "./README.md"
+repository = "https://github.com/rise0chen/async_ach.git"
+version = "0.0.1"
+
+[dependencies]
