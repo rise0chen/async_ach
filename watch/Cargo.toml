@@ -1,0 +1,18 @@
+[package]
+authors = ["rise0chen <rise0chen@163.com>"]
+categories = ["concurrency"]
+description = "Async Atomic Channel"
+edition = "2018"
+keywords = ["atomic", "channel", "no-heap"]
+license-file = "LICENSE"
+name = "async_ach-watch"
+readme = "./README.md"
+repository = "https://github.com/rise0chen/async_ach.git"
+version = "0.1.0"
+
+[dependencies]
+ach-cell = "0.1"
+async_ach-notify = {version = "0.1", path = "../notify"}
+
+[dev-dependencies]
+futures-test = "0"

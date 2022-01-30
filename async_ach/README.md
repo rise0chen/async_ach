@@ -8,7 +8,7 @@ All Data Structure has these Features:
 - `no_std`: Can run in embedded devices
 - `no_alloc`: Needn't dynamic memory allocation
 - Lock Free
-- Wait Free
+- Only spin in critical section
 
 ## Usage
 

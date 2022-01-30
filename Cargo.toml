@@ -1,5 +1,8 @@
 [workspace]
 members = [
+  "waker",
+  "notify",
+  "watch",
   "async_ach",
 ]
 
