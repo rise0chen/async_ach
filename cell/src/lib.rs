@@ -45,24 +45,36 @@ impl<T, const MP: usize, const MC: usize> Cell<T, MP, MC> {
     }
 }
 impl<T: Unpin, const MP: usize, const MC: usize> Cell<T, MP, MC> {
+    /// Tries to get a reference to the value of the Cell.
+    ///
+    /// Returns Err if the cell is uninitialized or in critical section.
     pub fn try_get(&self) -> Result<Ref<T, MP, MC>, Error<()>> {
         self.val.try_get().map(|x| Ref {
             parent: self,
             val: x,
         })
     }
+    /// Tries to get a reference to the value of the Cell.
+    ///
+    /// Returns Err if the cell is uninitialized.
     pub fn get(&self) -> Get<'_, T, MP, MC> {
         Get {
             parent: self,
             wait_p: self.producer.listen(),
         }
     }
+    /// Sets the value of the Cell to the argument value.
+    ///
+    /// Returns Err if the value is refered, initialized or in critical section.
     pub fn try_set(&self, val: T) -> Result<(), Error<T>> {
         self.val.try_set(val).map(|x| {
             self.producer.notify();
             x
         })
     }
+    /// Sets the value of the Cell to the argument value.
+    ///
+    /// Returns Err if the value is refered, initialized.
     pub fn set(&self, val: T) -> Set<'_, T, MP, MC> {
         Set {
             parent: self,
@@ -70,12 +82,18 @@ impl<T: Unpin, const MP: usize, const MC: usize> Cell<T, MP, MC> {
             val: Some(val),
         }
     }
+    /// Takes ownership of the current value, leaving the cell uninitialized.
+    ///
+    /// Returns Err if the cell is refered or in critical section.
     pub fn try_take(&self) -> Result<Option<T>, Error<()>> {
         self.val.try_take().map(|x| {
             self.consumer.notify();
             x
         })
     }
+    /// Takes ownership of the current value, leaving the cell uninitialized.
+    ///
+    /// Returns Err if the cell is refered.
     pub fn take(&self) -> Take<'_, T, MP, MC> {
         Take {
             parent: self,
@@ -83,12 +101,18 @@ impl<T: Unpin, const MP: usize, const MC: usize> Cell<T, MP, MC> {
             wait_c: self.consumer.listen(),
         }
     }
+    /// Replaces the contained value with value, and returns the old contained value.
+    ///
+    /// Returns Err if the value is refered or in critical section.
     pub fn try_replace(&self, val: T) -> Result<Option<T>, Error<T>> {
         self.val.try_replace(val).map(|x| {
             self.producer.notify();
             x
         })
     }
+    /// Replaces the contained value with value, and returns the old contained value.
+    ///
+    /// Returns Err if the value is refered.
     pub fn replace(&self, val: T) -> Replace<'_, T, MP, MC> {
         Replace {
             parent: self,

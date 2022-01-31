@@ -22,12 +22,16 @@ impl<T, const N: usize, const MP: usize, const MC: usize> Ring<T, N, MP, MC> {
     }
 }
 impl<T: Unpin, const N: usize, const MP: usize, const MC: usize> Ring<T, N, MP, MC> {
+    /// Appends an element to the back of the Ring.
+    ///
+    /// Returns Err if the Ring is full or in critical section.
     pub fn try_push(&self, val: T) -> Result<(), Error<T>> {
         self.buf.try_push(val).map(|x| {
             self.producer.notify();
             x
         })
     }
+    /// Appends an element to the back of the Ring.
     pub fn push(&self, val: T) -> Push<T, N, MP, MC> {
         Push {
             parent: self,
@@ -35,12 +39,17 @@ impl<T: Unpin, const N: usize, const MP: usize, const MC: usize> Ring<T, N, MP, 
             val: Some(val),
         }
     }
+
+    /// Removes the first element and returns it.
+    ///
+    /// Returns Err if the Ring is empty or in critical section.
     pub fn try_pop(&self) -> Result<T, Error<()>> {
         self.buf.try_pop().map(|x| {
             self.consumer.notify();
             x
         })
     }
+    /// Removes the first element and returns it.
     pub fn pop(&self) -> Pop<T, N, MP, MC> {
         Pop {
             parent: self,

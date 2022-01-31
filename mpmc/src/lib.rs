@@ -13,9 +13,13 @@ impl<'a, T, const N: usize, const MP: usize, const MC: usize> Sender<'a, T, N, M
     }
 }
 impl<'a, T: Unpin, const N: usize, const MP: usize, const MC: usize> Sender<'a, T, N, MP, MC> {
+    /// Appends an element to the back of the Ring.
+    ///
+    /// Returns Err if the Ring is full or in critical section.
     pub fn try_send(&self, t: T) -> Result<(), Error<T>> {
         self.mpmc.try_push(t)
     }
+    /// Appends an element to the back of the Ring.
     pub async fn send(&self, t: T) {
         self.mpmc.push(t).await
     }
@@ -30,9 +34,13 @@ impl<'a, T, const N: usize, const MP: usize, const MC: usize> Receiver<'a, T, N,
     }
 }
 impl<'a, T: Unpin, const N: usize, const MP: usize, const MC: usize> Receiver<'a, T, N, MP, MC> {
+    /// Removes the first element and returns it.
+    ///
+    /// Returns Err if the Ring is empty or in critical section.
     pub fn try_recv(&self) -> Result<T, Error<()>> {
         self.mpmc.try_pop()
     }
+    /// Removes the first element and returns it.
     pub async fn recv(&self) -> T {
         self.mpmc.pop().await
     }

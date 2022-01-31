@@ -8,6 +8,12 @@ license-file = "LICENSE"
 name = "async_ach"
 readme = "./README.md"
 repository = "https://github.com/rise0chen/async_ach.git"
-version = "0.0.1"
+version = "0.1.0"
 
 [dependencies]
+async_ach-cell = {version = "0.1", path = "../cell"}
+async_ach-mpmc = {version = "0.1", path = "../mpmc"}
+async_ach-notify = {version = "0.1", path = "../notify"}
+async_ach-ring = {version = "0.1", path = "../ring"}
+async_ach-waker = {version = "0.1", path = "../waker"}
+async_ach-watch = {version = "0.1", path = "../watch"}
