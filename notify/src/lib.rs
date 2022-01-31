@@ -18,13 +18,12 @@ impl<const W: usize> Notify<W> {
         }
     }
     /// Notify all waiters
-    pub fn notify_waiters(&self) {
+    pub fn notify(&self) {
         self.version.fetch_add(1, Relaxed);
         self.wakers.wake();
     }
-    /// Notice: Spin
-    pub fn notified(&self) -> Notified<'_, W> {
-        Notified {
+    pub fn listen(&self) -> Listener<'_, W> {
+        Listener {
             parent: self,
             version: self.version.load(Relaxed),
             token: None,
@@ -32,12 +31,12 @@ impl<const W: usize> Notify<W> {
     }
 }
 
-pub struct Notified<'a, const W: usize> {
+pub struct Listener<'a, const W: usize> {
     parent: &'a Notify<W>,
     version: usize,
     token: Option<WakerToken<'a, W>>,
 }
-impl<'a, const W: usize> Future for Notified<'a, W> {
+impl<'a, const W: usize> Future for Listener<'a, W> {
     type Output = ();
     fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         let new_version = self.parent.version.load(Relaxed);
@@ -47,9 +46,9 @@ impl<'a, const W: usize> Future for Notified<'a, W> {
         } else {
             let waker = cx.waker();
             if let Some(token) = &self.token {
-                token.swap(waker);
+                token.replace(waker);
             } else {
-                if let Ok(token) = self.parent.wakers.register(waker) {
+                if let Some(token) = self.parent.wakers.register(waker) {
                     self.token = Some(token);
                 } else {
                     // spin

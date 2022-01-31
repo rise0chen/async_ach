@@ -5,10 +5,15 @@ description = "Async Atomic Channel"
 edition = "2018"
 keywords = ["atomic", "channel", "no-heap"]
 license-file = "LICENSE"
-name = "async_ach-waker"
+name = "async_ach-cell"
 readme = "./README.md"
 repository = "https://github.com/rise0chen/async_ach.git"
-version = "0.1.1"
+version = "0.1.0"
 
 [dependencies]
-ach-array = "0.1"
+ach-cell = "0.1"
+ach-util = "0.1"
+async_ach-notify = {version = "0.1", path = "../notify"}
+
+[dev-dependencies]
+futures-test = "0"

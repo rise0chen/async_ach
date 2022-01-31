@@ -12,6 +12,7 @@ version = "0.1.0"
 
 [dependencies]
 ach-cell = "0.1"
+ach-util = "0.1"
 async_ach-notify = {version = "0.1", path = "../notify"}
 
 [dev-dependencies]

@@ -9,20 +9,19 @@ pub struct WakerToken<'a, const N: usize> {
     index: usize,
 }
 impl<'a, const N: usize> WakerToken<'a, N> {
-    /// Swap waker
+    /// Replace waker
     ///
     /// wake it immediately, if is waking.
-    ///
-    /// Notice: `Spin`
-    pub fn swap(&self, waker: &Waker) {
-        if self.pool.pool.swap(self.index, waker.clone()).is_err() {
+    pub fn replace(&self, waker: &Waker) {
+        if let Err(_) = self.pool.pool[self.index].try_replace(waker.clone()) {
             waker.wake_by_ref();
+            return;
         }
     }
 }
 impl<'a, const N: usize> Drop for WakerToken<'a, N> {
     fn drop(&mut self) {
-        if let Some(wake) = self.pool.pool.get(self.index) {
+        if let Ok(wake) = self.pool.pool[self.index].try_get() {
             wake.remove();
         }
     }
@@ -36,21 +35,19 @@ impl<const N: usize> WakerPool<N> {
         Self { pool: Array::new() }
     }
     /// Hold a place in the pool
-    pub fn register(&self, waker: &Waker) -> Result<WakerToken<N>, ()> {
+    ///
+    /// Returns None if the pool is full.
+    pub fn register(&self, waker: &Waker) -> Option<WakerToken<N>> {
         if let Ok(index) = self.pool.push(waker.clone()) {
-            Ok(WakerToken { pool: self, index })
+            Some(WakerToken { pool: self, index })
         } else {
-            Err(())
+            None
         }
     }
     /// Only wake all, not remove it
-    ///
-    /// Notice: `Spin`
     pub fn wake(&self) {
-        for w in self.pool.iter(true) {
-            let waker: Waker = w.clone();
-            drop(w);
-            waker.wake();
+        for waker in self.pool.iter(false) {
+            waker.wake_by_ref();
         }
     }
 }

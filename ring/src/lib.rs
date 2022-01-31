@@ -1,44 +1,57 @@
 #![no_std]
 
 use ach_ring as ach;
-use async_ach_notify::{Notified, Notify};
+use ach_util::Error;
+use async_ach_notify::{Listener, Notify};
 use core::future::Future;
 use core::pin::Pin;
 use core::task::{Context, Poll};
 
 pub struct Ring<T, const N: usize, const MP: usize, const MC: usize> {
     buf: ach::Ring<T, N>,
-    w_p: Notify<MP>,
-    w_c: Notify<MC>,
+    consumer: Notify<MP>,
+    producer: Notify<MC>,
 }
 impl<T, const N: usize, const MP: usize, const MC: usize> Ring<T, N, MP, MC> {
     pub const fn new() -> Self {
         Self {
             buf: ach::Ring::new(),
-            w_p: Notify::new(),
-            w_c: Notify::new(),
-        }
-    }
-    pub fn pop(&self) -> Pop<T, N, MP, MC> {
-        Pop {
-            parent: self,
-            notified: self.w_c.notified(),
+            consumer: Notify::new(),
+            producer: Notify::new(),
         }
     }
 }
 impl<T: Unpin, const N: usize, const MP: usize, const MC: usize> Ring<T, N, MP, MC> {
+    pub fn try_push(&self, val: T) -> Result<(), Error<T>> {
+        self.buf.try_push(val).map(|x| {
+            self.producer.notify();
+            x
+        })
+    }
     pub fn push(&self, val: T) -> Push<T, N, MP, MC> {
         Push {
             parent: self,
-            notified: self.w_p.notified(),
+            wait_c: self.consumer.listen(),
             val: Some(val),
+        }
+    }
+    pub fn try_pop(&self) -> Result<T, Error<()>> {
+        self.buf.try_pop().map(|x| {
+            self.consumer.notify();
+            x
+        })
+    }
+    pub fn pop(&self) -> Pop<T, N, MP, MC> {
+        Pop {
+            parent: self,
+            wait_p: self.producer.listen(),
         }
     }
 }
 
 pub struct Push<'a, T: Unpin, const N: usize, const MP: usize, const MC: usize> {
     parent: &'a Ring<T, N, MP, MC>,
-    notified: Notified<'a, MP>,
+    wait_c: Listener<'a, MP>,
     val: Option<T>,
 }
 impl<'a, T: Unpin, const N: usize, const MP: usize, const MC: usize> Future
@@ -51,35 +64,37 @@ impl<'a, T: Unpin, const N: usize, const MP: usize, const MC: usize> Future
         } else {
             return Poll::Ready(());
         };
-        if let Err(val) = self.parent.buf.push(val) {
-            self.val = Some(val);
-            if Pin::new(&mut self.notified).poll(cx).is_ready() {
-                self.poll(cx)
-            } else {
-                Poll::Pending
+        match self.parent.try_push(val) {
+            Ok(v) => Poll::Ready(v),
+            Err(err) => {
+                self.val = Some(err.input);
+                if Pin::new(&mut self.wait_c).poll(cx).is_ready() {
+                    self.poll(cx)
+                } else {
+                    Poll::Pending
+                }
             }
-        } else {
-            self.parent.w_c.notify_waiters();
-            Poll::Ready(())
         }
     }
 }
 
 pub struct Pop<'a, T, const N: usize, const MP: usize, const MC: usize> {
     parent: &'a Ring<T, N, MP, MC>,
-    notified: Notified<'a, MC>,
+    wait_p: Listener<'a, MC>,
 }
-impl<'a, T, const N: usize, const MP: usize, const MC: usize> Future for Pop<'a, T, N, MP, MC> {
+impl<'a, T: Unpin, const N: usize, const MP: usize, const MC: usize> Future
+    for Pop<'a, T, N, MP, MC>
+{
     type Output = T;
     fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
-        if let Some(val) = self.parent.buf.pop() {
-            self.parent.w_p.notify_waiters();
-            Poll::Ready(val)
-        } else {
-            if Pin::new(&mut self.notified).poll(cx).is_ready() {
-                self.poll(cx)
-            } else {
-                Poll::Pending
+        match self.parent.try_pop() {
+            Ok(v) => Poll::Ready(v),
+            Err(_) => {
+                if Pin::new(&mut self.wait_p).poll(cx).is_ready() {
+                    self.poll(cx)
+                } else {
+                    Poll::Pending
+                }
             }
         }
     }

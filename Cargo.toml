@@ -2,6 +2,7 @@
 members = [
   "waker",
   "notify",
+  "cell",
   "watch",
   "ring",
   "mpmc",

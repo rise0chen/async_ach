@@ -1,5 +1,6 @@
 #![no_std]
 
+use ach_util::Error;
 use async_ach_ring::Ring;
 use core::ops::Deref;
 
@@ -12,6 +13,9 @@ impl<'a, T, const N: usize, const MP: usize, const MC: usize> Sender<'a, T, N, M
     }
 }
 impl<'a, T: Unpin, const N: usize, const MP: usize, const MC: usize> Sender<'a, T, N, MP, MC> {
+    pub fn try_send(&self, t: T) -> Result<(), Error<T>> {
+        self.mpmc.try_push(t)
+    }
     pub async fn send(&self, t: T) {
         self.mpmc.push(t).await
     }
@@ -23,6 +27,11 @@ pub struct Receiver<'a, T, const N: usize, const MP: usize, const MC: usize> {
 impl<'a, T, const N: usize, const MP: usize, const MC: usize> Receiver<'a, T, N, MP, MC> {
     const fn new(mpmc: &'a Mpmc<T, N, MP, MC>) -> Self {
         Receiver { mpmc }
+    }
+}
+impl<'a, T: Unpin, const N: usize, const MP: usize, const MC: usize> Receiver<'a, T, N, MP, MC> {
+    pub fn try_recv(&self) -> Result<T, Error<()>> {
+        self.mpmc.try_pop()
     }
     pub async fn recv(&self) -> T {
         self.mpmc.pop().await

@@ -11,6 +11,7 @@ repository = "https://github.com/rise0chen/async_ach.git"
 version = "0.1.0"
 
 [dependencies]
+ach-util = "0.1"
 async_ach-ring = {version = "0.1", path = "../ring"}
 
 [dev-dependencies]
