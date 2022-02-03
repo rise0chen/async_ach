@@ -8,12 +8,13 @@ license-file = "LICENSE"
 name = "async_ach-watch"
 readme = "./README.md"
 repository = "https://github.com/rise0chen/async_ach.git"
-version = "0.1.0"
+version = "0.1.1"
 
 [dependencies]
-ach-cell = "0.1"
 ach-util = "0.1"
+async_ach-cell = {version = "0.1", path = "../cell"}
 async_ach-notify = {version = "0.1", path = "../notify"}
 
 [dev-dependencies]
+futures-executor = {version = "0", features = ["thread-pool"]}
 futures-test = "0"

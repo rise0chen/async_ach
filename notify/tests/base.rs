@@ -11,7 +11,7 @@ fn test() {
     let mut listener1 = NOTIFY.listen();
     assert!(Pin::new(&mut listener1).poll(&mut cx).is_pending());
     assert!(Pin::new(&mut listener1).poll(&mut cx).is_pending());
-    NOTIFY.notify();
+    NOTIFY.notify_one();
     assert!(Pin::new(&mut listener1).poll(&mut cx).is_ready());
     assert!(Pin::new(&mut listener1).poll(&mut cx).is_pending());
 
@@ -20,8 +20,16 @@ fn test() {
     assert!(Pin::new(&mut listener1).poll(&mut cx).is_pending());
     assert!(Pin::new(&mut listener2).poll(&mut cx).is_pending());
     assert!(Pin::new(&mut listener3).poll(&mut cx).is_pending());
-    NOTIFY.notify();
+    NOTIFY.notify_one();
     assert!(Pin::new(&mut listener1).poll(&mut cx).is_ready());
-    assert!(Pin::new(&mut listener2).poll(&mut cx).is_ready());
-    assert!(Pin::new(&mut listener3).poll(&mut cx).is_ready());
+    assert!(Pin::new(&mut listener2).poll(&mut cx).is_pending());
+    assert!(Pin::new(&mut listener3).poll(&mut cx).is_pending());
+    NOTIFY.notify_one();
+    assert!(Pin::new(&mut listener1).poll(&mut cx).is_ready());
+    assert!(Pin::new(&mut listener2).poll(&mut cx).is_pending());
+    assert!(Pin::new(&mut listener3).poll(&mut cx).is_pending());
+    NOTIFY.notify_one();
+    assert!(Pin::new(&mut listener1).poll(&mut cx).is_ready());
+    assert!(Pin::new(&mut listener2).poll(&mut cx).is_pending());
+    assert!(Pin::new(&mut listener3).poll(&mut cx).is_pending());
 }

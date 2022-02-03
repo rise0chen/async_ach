@@ -4,6 +4,7 @@ members = [
   "notify",
   "cell",
   "watch",
+  "spsc",
   "ring",
   "mpmc",
   "async_ach",

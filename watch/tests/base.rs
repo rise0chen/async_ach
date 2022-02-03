@@ -10,19 +10,17 @@ fn test() {
     let mut cx = task::noop_context();
 
     let mut sub1 = WATCH.subscribe();
-    assert!(Pin::new(&mut sub1).poll(&mut cx).is_pending());
-    assert!(Pin::new(&mut sub1).poll(&mut cx).is_pending());
-    WATCH.send(1).unwrap();
-    assert_eq!(Pin::new(&mut sub1).poll(&mut cx), Poll::Ready(1));
-    assert!(Pin::new(&mut sub1).poll(&mut cx).is_pending());
+    let mut get1 = Box::pin(sub1.get());
+    assert!(Pin::new(&mut get1).poll(&mut cx).is_pending());
+    assert!(Pin::new(&mut get1).poll(&mut cx).is_pending());
+    WATCH.try_send(1).unwrap();
+    assert_eq!(Pin::new(&mut get1).poll(&mut cx), Poll::Ready(1));
 
     let mut sub2 = WATCH.subscribe();
     let mut sub3 = WATCH.subscribe();
-    assert!(Pin::new(&mut sub1).poll(&mut cx).is_pending());
-    assert!(Pin::new(&mut sub2).poll(&mut cx).is_pending());
-    assert!(Pin::new(&mut sub3).poll(&mut cx).is_pending());
-    WATCH.send(2).unwrap();
-    assert_eq!(Pin::new(&mut sub1).poll(&mut cx), Poll::Ready(2));
-    assert_eq!(Pin::new(&mut sub2).poll(&mut cx), Poll::Ready(2));
-    assert_eq!(Pin::new(&mut sub3).poll(&mut cx), Poll::Ready(2));
+    let mut get2 = Box::pin(sub2.get());
+    WATCH.try_send(2).unwrap();
+    let mut get3 = Box::pin(sub3.get());
+    assert_eq!(Pin::new(&mut get2).poll(&mut cx), Poll::Ready(2));
+    assert_eq!(Pin::new(&mut get3).poll(&mut cx), Poll::Ready(2));
 }
