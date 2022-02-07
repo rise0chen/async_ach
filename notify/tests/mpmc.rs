@@ -1,7 +1,7 @@
 use async_ach_notify::Notify;
+use core::sync::atomic::{AtomicUsize, Ordering::SeqCst};
 use core::time::Duration;
 use futures_executor::ThreadPool;
-use core::sync::atomic::{AtomicUsize, Ordering::SeqCst};
 use std::process;
 use std::thread;
 
