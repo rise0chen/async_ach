@@ -4,12 +4,12 @@ use ach_ring as ach;
 use ach_util::Error;
 use async_ach_notify::Notify;
 
-pub struct Ring<T, const N: usize, const MP: usize, const MC: usize> {
+pub struct Ring<T, const N: usize> {
     buf: ach::Ring<T, N>,
-    consumer: Notify<MP>,
-    producer: Notify<MC>,
+    consumer: Notify,
+    producer: Notify,
 }
-impl<T, const N: usize, const MP: usize, const MC: usize> Ring<T, N, MP, MC> {
+impl<T, const N: usize> Ring<T, N> {
     pub const fn new() -> Self {
         Self {
             buf: ach::Ring::new(),
@@ -21,7 +21,7 @@ impl<T, const N: usize, const MP: usize, const MC: usize> Ring<T, N, MP, MC> {
         self.buf.len()
     }
 }
-impl<T: Unpin, const N: usize, const MP: usize, const MC: usize> Ring<T, N, MP, MC> {
+impl<T: Unpin, const N: usize> Ring<T, N> {
     /// Appends an element to the back of the Ring.
     ///
     /// Returns Err if the Ring is full or in critical section.

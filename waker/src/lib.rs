@@ -1,5 +1,4 @@
 #![no_std]
 
-mod pool;
-
-pub use pool::WakerPool;
+pub mod linked;
+pub mod pool;

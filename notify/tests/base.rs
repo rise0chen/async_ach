@@ -5,7 +5,7 @@ use futures_test::task;
 
 #[test]
 fn test() {
-    static NOTIFY: Notify<2> = Notify::new();
+    static NOTIFY: Notify = Notify::new();
     let mut cx = task::noop_context();
 
     let mut listener1 = NOTIFY.listen();

@@ -6,7 +6,7 @@ use futures_test::task;
 
 #[test]
 fn test() {
-    static RING: Ring<usize, 2, 2, 2> = Ring::new();
+    static RING: Ring<usize, 2> = Ring::new();
     let mut cx = task::noop_context();
 
     let mut pop1 = Box::pin(RING.pop());

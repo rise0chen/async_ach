@@ -8,8 +8,8 @@ const TEST_TIMES: usize = 10000;
 
 #[test]
 fn test() {
-    static NOTIFY_P: Notify<2> = Notify::new();
-    static NOTIFY_C: Notify<2> = Notify::new();
+    static NOTIFY_P: Notify = Notify::new();
+    static NOTIFY_C: Notify = Notify::new();
     let executor = ThreadPool::new().unwrap();
     executor.spawn_ok(async {
         // Producer_1

@@ -1,7 +1,7 @@
 use async_ach_notify::Notify;
+use core::sync::atomic::{AtomicUsize, Ordering::SeqCst};
 use core::time::Duration;
 use futures_executor::ThreadPool;
-use core::sync::atomic::{AtomicUsize, Ordering::SeqCst};
 use std::process;
 use std::thread;
 
@@ -10,8 +10,8 @@ const TEST_TIMES: usize = 10000;
 #[test]
 fn test() {
     static FINISHED: AtomicUsize = AtomicUsize::new(0);
-    static NOTIFY_P: Notify<2> = Notify::new();
-    static NOTIFY_C: Notify<2> = Notify::new();
+    static NOTIFY_P: Notify = Notify::new();
+    static NOTIFY_C: Notify = Notify::new();
     let executor = ThreadPool::new().unwrap();
     executor.spawn_ok(async {
         // Producer_1
@@ -60,5 +60,7 @@ fn test() {
         }
     });
     thread::sleep(Duration::from_secs(3));
+    NOTIFY_P.notify_one();
+    NOTIFY_C.notify_one();
     unreachable!()
 }

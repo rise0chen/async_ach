@@ -10,7 +10,7 @@ const TEST_TIMES: usize = 10000;
 #[test]
 fn test() {
     static FINISHED: AtomicUsize = AtomicUsize::new(0);
-    static NOTIFY_P: Notify<10> = Notify::new();
+    static NOTIFY_P: Notify = Notify::new();
     let executor = ThreadPool::new().unwrap();
     executor.spawn_ok(async {
         // Producer_1

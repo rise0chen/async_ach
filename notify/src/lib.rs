@@ -1,20 +1,20 @@
 #![no_std]
 
-use async_ach_waker::WakerPool;
+use async_ach_waker::linked::{WakerLinked, WakerNode};
 use core::future::Future;
 use core::pin::Pin;
 use core::sync::atomic::{AtomicUsize, Ordering::SeqCst};
 use core::task::{Context, Poll};
 
-pub struct Notify<const W: usize> {
+pub struct Notify {
     permit: AtomicUsize,
-    wakers: WakerPool<W>,
+    wakers: WakerLinked,
 }
-impl<const W: usize> Notify<W> {
+impl Notify {
     pub const fn new() -> Self {
         Self {
             permit: AtomicUsize::new(0),
-            wakers: WakerPool::new(),
+            wakers: WakerLinked::new(),
         }
     }
     /// Notify a waiter
@@ -36,8 +36,11 @@ impl<const W: usize> Notify<W> {
         self.permit.load(SeqCst) != 0
     }
     /// Wait for a notice
-    pub fn listen(&self) -> Listener<'_, W> {
-        Listener { parent: self }
+    pub fn listen(&self) -> Listener {
+        Listener {
+            parent: self,
+            waker: WakerNode::new(),
+        }
     }
     fn get_permit(&self) -> bool {
         self.permit
@@ -46,21 +49,22 @@ impl<const W: usize> Notify<W> {
     }
 }
 
-#[derive(Clone)]
-pub struct Listener<'a, const W: usize> {
-    parent: &'a Notify<W>,
+pub struct Listener<'a> {
+    parent: &'a Notify,
+    waker: WakerNode,
 }
-impl<'a, const W: usize> Future for Listener<'a, W> {
+impl<'a> Future for Listener<'a> {
     type Output = ();
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         if self.parent.get_permit() {
             Poll::Ready(())
         } else {
-            let waker = cx.waker();
-            if !self.parent.wakers.register(waker) {
-                // spin
-                waker.wake_by_ref();
-            }
+            self.waker.register(cx.waker());
+            unsafe {
+                self.parent
+                    .wakers
+                    .push(&mut *(&self.waker as *const _ as *mut _))
+            };
             if self.parent.get_permit() {
                 Poll::Ready(())
             } else {

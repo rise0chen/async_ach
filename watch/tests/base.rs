@@ -6,7 +6,7 @@ use futures_test::task;
 
 #[test]
 fn test() {
-    static WATCH: Watch<usize, 2> = Watch::new(0);
+    static WATCH: Watch<usize> = Watch::new(0);
     let mut cx = task::noop_context();
 
     let mut sub1 = WATCH.subscribe();

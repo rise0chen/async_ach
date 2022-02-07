@@ -8,17 +8,17 @@ use core::ops::Deref;
 use core::pin::Pin;
 use core::task::{Context, Poll};
 
-pub struct Ref<'a, T, const MP: usize, const MC: usize> {
-    parent: &'a Cell<T, MP, MC>,
+pub struct Ref<'a, T> {
+    parent: &'a Cell<T>,
     val: ach::Ref<'a, T>,
 }
-impl<'a, T, const MP: usize, const MC: usize> Deref for Ref<'a, T, MP, MC> {
+impl<'a, T> Deref for Ref<'a, T> {
     type Target = ach::Ref<'a, T>;
     fn deref(&self) -> &Self::Target {
         &self.val
     }
 }
-impl<'a, T, const MP: usize, const MC: usize> Drop for Ref<'a, T, MP, MC> {
+impl<'a, T> Drop for Ref<'a, T> {
     fn drop(&mut self) {
         if self.val.ref_num() == Ok(1) {
             if self.val.will_remove() {
@@ -30,12 +30,12 @@ impl<'a, T, const MP: usize, const MC: usize> Drop for Ref<'a, T, MP, MC> {
     }
 }
 
-pub struct Cell<T, const MP: usize, const MC: usize> {
+pub struct Cell<T> {
     val: ach::Cell<T>,
-    consumer: Notify<MP>,
-    producer: Notify<MC>,
+    consumer: Notify,
+    producer: Notify,
 }
-impl<T, const MP: usize, const MC: usize> Cell<T, MP, MC> {
+impl<T> Cell<T> {
     pub const fn new() -> Self {
         Self {
             val: ach::Cell::new(),
@@ -51,11 +51,11 @@ impl<T, const MP: usize, const MC: usize> Cell<T, MP, MC> {
         }
     }
 }
-impl<T: Unpin, const MP: usize, const MC: usize> Cell<T, MP, MC> {
+impl<T: Unpin> Cell<T> {
     /// Tries to get a reference to the value of the Cell.
     ///
     /// Returns Err if the cell is uninitialized or in critical section.
-    pub fn try_get(&self) -> Result<Ref<T, MP, MC>, Error<()>> {
+    pub fn try_get(&self) -> Result<Ref<T>, Error<()>> {
         self.val.try_get().map(|x| Ref {
             parent: self,
             val: x,
@@ -64,7 +64,7 @@ impl<T: Unpin, const MP: usize, const MC: usize> Cell<T, MP, MC> {
     /// Tries to get a reference to the value of the Cell.
     ///
     /// Returns Err if the cell is uninitialized.
-    pub fn get(&self) -> Get<'_, T, MP, MC> {
+    pub fn get(&self) -> Get<'_, T> {
         Get {
             parent: self,
             wait_p: self.producer.listen(),
@@ -82,7 +82,7 @@ impl<T: Unpin, const MP: usize, const MC: usize> Cell<T, MP, MC> {
     /// Sets the value of the Cell to the argument value.
     ///
     /// Returns Err if the value is refered or initialized.
-    pub fn set(&self, val: T) -> Set<'_, T, MP, MC> {
+    pub fn set(&self, val: T) -> Set<'_, T> {
         Set {
             parent: self,
             wait_c: self.consumer.listen(),
@@ -99,7 +99,7 @@ impl<T: Unpin, const MP: usize, const MC: usize> Cell<T, MP, MC> {
         })
     }
     /// Takes ownership of the current value, leaving the cell uninitialized.
-    pub fn take(&self) -> Take<'_, T, MP, MC> {
+    pub fn take(&self) -> Take<'_, T> {
         Take {
             parent: self,
             wait_p: self.producer.listen(),
@@ -116,7 +116,7 @@ impl<T: Unpin, const MP: usize, const MC: usize> Cell<T, MP, MC> {
         })
     }
     /// Replaces the contained value with value, and returns the old contained value.
-    pub fn replace(&self, val: T) -> Replace<'_, T, MP, MC> {
+    pub fn replace(&self, val: T) -> Replace<'_, T> {
         Replace {
             parent: self,
             wait_p: self.producer.listen(),
@@ -126,12 +126,12 @@ impl<T: Unpin, const MP: usize, const MC: usize> Cell<T, MP, MC> {
     }
 }
 
-pub struct Get<'a, T, const MP: usize, const MC: usize> {
-    parent: &'a Cell<T, MP, MC>,
-    wait_p: Listener<'a, MC>,
+pub struct Get<'a, T> {
+    parent: &'a Cell<T>,
+    wait_p: Listener<'a>,
 }
-impl<'a, T: Unpin, const MP: usize, const MC: usize> Future for Get<'a, T, MP, MC> {
-    type Output = Result<Ref<'a, T, MP, MC>, Error<()>>;
+impl<'a, T: Unpin> Future for Get<'a, T> {
+    type Output = Result<Ref<'a, T>, Error<()>>;
     fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         match self.parent.try_get() {
             Ok(v) => Poll::Ready(Ok(v)),
@@ -146,12 +146,12 @@ impl<'a, T: Unpin, const MP: usize, const MC: usize> Future for Get<'a, T, MP, M
         }
     }
 }
-pub struct Set<'a, T, const MP: usize, const MC: usize> {
-    parent: &'a Cell<T, MP, MC>,
-    wait_c: Listener<'a, MP>,
+pub struct Set<'a, T> {
+    parent: &'a Cell<T>,
+    wait_c: Listener<'a>,
     val: Option<T>,
 }
-impl<'a, T: Unpin, const MP: usize, const MC: usize> Future for Set<'a, T, MP, MC> {
+impl<'a, T: Unpin> Future for Set<'a, T> {
     type Output = Result<(), Error<T>>;
     fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         let val = self.val.take().expect("resumed after completion");
@@ -170,12 +170,12 @@ impl<'a, T: Unpin, const MP: usize, const MC: usize> Future for Set<'a, T, MP, M
     }
 }
 
-pub struct Take<'a, T, const MP: usize, const MC: usize> {
-    parent: &'a Cell<T, MP, MC>,
-    wait_p: Listener<'a, MC>,
-    wait_c: Listener<'a, MP>,
+pub struct Take<'a, T> {
+    parent: &'a Cell<T>,
+    wait_p: Listener<'a>,
+    wait_c: Listener<'a>,
 }
-impl<'a, T: Unpin, const MP: usize, const MC: usize> Future for Take<'a, T, MP, MC> {
+impl<'a, T: Unpin> Future for Take<'a, T> {
     type Output = Option<T>;
     fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         match self.parent.try_take() {
@@ -192,13 +192,13 @@ impl<'a, T: Unpin, const MP: usize, const MC: usize> Future for Take<'a, T, MP, 
         }
     }
 }
-pub struct Replace<'a, T, const MP: usize, const MC: usize> {
-    parent: &'a Cell<T, MP, MC>,
-    wait_p: Listener<'a, MC>,
-    wait_c: Listener<'a, MP>,
+pub struct Replace<'a, T> {
+    parent: &'a Cell<T>,
+    wait_p: Listener<'a>,
+    wait_c: Listener<'a>,
     val: Option<T>,
 }
-impl<'a, T: Unpin, const MP: usize, const MC: usize> Future for Replace<'a, T, MP, MC> {
+impl<'a, T: Unpin> Future for Replace<'a, T> {
     type Output = Option<T>;
     fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         let val = self.val.take().expect("resumed after completion");

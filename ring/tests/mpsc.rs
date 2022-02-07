@@ -9,7 +9,7 @@ const TEST_TIMES: usize = 10000;
 
 #[test]
 fn test() {
-    static RING: Ring<usize, 2, 2, 1> = Ring::new();
+    static RING: Ring<usize, 2> = Ring::new();
     let executor = ThreadPool::new().unwrap();
     executor.spawn_ok(async {
         // Producer_1

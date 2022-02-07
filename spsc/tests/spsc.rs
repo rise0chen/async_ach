@@ -1,9 +1,9 @@
 use async_ach_spsc::Spsc;
 use core::ops::Range;
-use std::thread;
 use core::time::Duration;
 use futures_executor::ThreadPool;
 use std::process;
+use std::thread;
 
 const TEST_DATA: Range<usize> = 0..10000;
 

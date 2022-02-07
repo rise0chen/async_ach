@@ -5,8 +5,8 @@ use async_ach_notify::Notify;
 
 pub struct Spsc<T, const N: usize> {
     buf: ach::Spsc<T, N>,
-    consumer: Notify<1>,
-    producer: Notify<1>,
+    consumer: Notify,
+    producer: Notify,
 }
 impl<T, const N: usize> Spsc<T, N> {
     pub const fn new() -> Self {

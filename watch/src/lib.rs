@@ -2,15 +2,15 @@
 
 use ach_util::Error;
 use async_ach_cell::Cell;
-use async_ach_notify::{Listener, Notify};
+use async_ach_notify::Notify;
 use core::sync::atomic::{AtomicUsize, Ordering::SeqCst};
 
-pub struct Watch<T, const W: usize> {
-    val: Cell<T, 1, W>,
+pub struct Watch<T> {
+    val: Cell<T>,
     version: AtomicUsize,
-    producer: Notify<W>,
+    producer: Notify,
 }
-impl<T, const W: usize> Watch<T, W> {
+impl<T> Watch<T> {
     pub const fn new(init: T) -> Self {
         Self {
             val: Cell::new_with(init),
@@ -19,7 +19,7 @@ impl<T, const W: usize> Watch<T, W> {
         }
     }
 }
-impl<T: Unpin, const W: usize> Watch<T, W> {
+impl<T: Unpin> Watch<T> {
     /// Update the watch
     ///
     /// Returns Err if the value is refered or in critical section.
@@ -35,11 +35,10 @@ impl<T: Unpin, const W: usize> Watch<T, W> {
         self.version.fetch_add(1, SeqCst);
         self.producer.notify_one();
     }
-    pub fn subscribe(&self) -> Receiver<'_, T, W> {
+    pub fn subscribe(&self) -> Receiver<'_, T> {
         Receiver {
             parent: self,
             version: self.version.load(SeqCst),
-            wait_p: self.producer.listen(),
         }
     }
     fn update(&self, version: &mut usize) -> bool {
@@ -53,18 +52,17 @@ impl<T: Unpin, const W: usize> Watch<T, W> {
     }
 }
 
-pub struct Receiver<'a, T, const W: usize> {
-    parent: &'a Watch<T, W>,
+pub struct Receiver<'a, T> {
+    parent: &'a Watch<T>,
     version: usize,
-    wait_p: Listener<'a, W>,
 }
-impl<'a, T: Unpin + Clone, const W: usize> Receiver<'a, T, W> {
+impl<'a, T: Unpin + Clone> Receiver<'a, T> {
     pub async fn get(&mut self) -> T {
         loop {
             if self.parent.update(&mut self.version) {
                 return self.parent.val.get().await.unwrap().clone();
             } else {
-                self.wait_p.clone().await;
+                self.parent.producer.listen().await;
             }
         }
     }

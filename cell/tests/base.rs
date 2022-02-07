@@ -5,7 +5,7 @@ use futures_test::task;
 
 #[test]
 fn test() {
-    static CELL: Cell<usize, 2, 2> = Cell::new();
+    static CELL: Cell<usize> = Cell::new();
     let mut cx = task::noop_context();
 
     let mut get = CELL.get();
