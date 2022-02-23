@@ -8,12 +8,13 @@ license-file = "LICENSE"
 name = "async_ach-ring"
 readme = "./README.md"
 repository = "https://github.com/rise0chen/async_ach.git"
-version = "0.1.1"
+version = "0.1.2"
 
 [dependencies]
 ach-ring = "0.1"
 ach-util = "0.1"
 async_ach-notify = {version = "0.1", path = "../notify"}
+futures-util = "0.3"
 
 [dev-dependencies]
 futures-executor = {version = "0", features = ["thread-pool"]}

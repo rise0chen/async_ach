@@ -4,6 +4,7 @@ use ach_util::Error;
 use async_ach_cell::Cell;
 use async_ach_notify::{Listener, Notify};
 use core::sync::atomic::{AtomicUsize, Ordering::SeqCst};
+use futures_util::StreamExt;
 
 pub struct Watch<T, const W: usize> {
     val: Cell<T, 1, W>,
@@ -64,7 +65,7 @@ impl<'a, T: Unpin + Clone, const W: usize> Receiver<'a, T, W> {
             if self.parent.update(&mut self.version) {
                 return self.parent.val.get().await.unwrap().clone();
             } else {
-                self.wait_p.clone().await;
+                self.wait_p.next().await;
             }
         }
     }

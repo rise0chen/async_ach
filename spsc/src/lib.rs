@@ -2,6 +2,7 @@
 
 use ach_spsc as ach;
 use async_ach_notify::Notify;
+use futures_util::StreamExt;
 
 pub struct Spsc<T, const N: usize> {
     buf: ach::Spsc<T, N>,
@@ -45,10 +46,11 @@ impl<'a, T: Unpin, const N: usize> Sender<'a, T, N> {
         })
     }
     pub async fn send<'b>(&'b mut self, mut val: T) {
+        let mut wait_c = self.parent.consumer.listen();
         loop {
             if let Err(v) = self.try_send(val) {
                 val = v;
-                self.parent.consumer.listen().await;
+                wait_c.next().await;
             } else {
                 break;
             }
@@ -68,11 +70,12 @@ impl<'a, T: Unpin, const N: usize> Receiver<'a, T, N> {
         })
     }
     pub async fn recv<'b>(&'b mut self) -> T {
+        let mut wait_p = self.parent.producer.listen();
         loop {
             if let Some(v) = self.try_recv() {
                 break v;
             } else {
-                self.parent.producer.listen().await;
+                wait_p.next().await;
             }
         }
     }

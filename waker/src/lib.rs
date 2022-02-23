@@ -2,4 +2,4 @@
 
 mod pool;
 
-pub use pool::WakerPool;
+pub use pool::{WakerEntity, WakerPool, WakerToken};
