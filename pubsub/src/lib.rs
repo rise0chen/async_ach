@@ -9,33 +9,29 @@ use core::pin::Pin;
 use core::task::{Context, Poll};
 use futures_util::Stream;
 
-pub struct Subscriber<'a, T, const N: usize, const MP: usize, const MC: usize> {
-    parent: &'a Publisher<T, N, MP, MC>,
+pub struct Subscriber<'a, T, const N: usize, const MC: usize> {
+    parent: &'a Publisher<T, N, MC>,
     ch: Ref<'a, ach::Subscriber<T, N>>,
 }
-impl<'a, T, const N: usize, const MP: usize, const MC: usize> Subscriber<'a, T, N, MP, MC> {
+impl<'a, T, const N: usize, const MC: usize> Subscriber<'a, T, N, MC> {
     /// Removes the first element and returns it.
     ///
     /// Returns Err if the Ring is empty.
     pub fn try_recv(&self) -> Result<T, Error<()>> {
-        let data = self.ch.try_recv()?;
-        self.parent.consumer.notify_one();
-        Ok(data)
+        self.ch.try_recv()
     }
-    pub fn recv<'b>(&'b self) -> Recv<'a, 'b, T, N, MP, MC> {
+    pub fn recv<'b>(&'b self) -> Recv<'a, 'b, T, N, MC> {
         Recv {
             parent: self,
             wait: self.parent.producer.listen(),
         }
     }
 }
-pub struct Recv<'a, 'b, T, const N: usize, const MP: usize, const MC: usize> {
-    parent: &'b Subscriber<'a, T, N, MP, MC>,
+pub struct Recv<'a, 'b, T, const N: usize, const MC: usize> {
+    parent: &'b Subscriber<'a, T, N, MC>,
     wait: Listener<'b, MC>,
 }
-impl<'a, 'b, T, const N: usize, const MP: usize, const MC: usize> Stream
-    for Recv<'a, 'b, T, N, MP, MC>
-{
+impl<'a, 'b, T, const N: usize, const MC: usize> Stream for Recv<'a, 'b, T, N, MC> {
     type Item = T;
     fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
         if let Ok(data) = self.parent.try_recv() {
@@ -50,9 +46,7 @@ impl<'a, 'b, T, const N: usize, const MP: usize, const MC: usize> Stream
         }
     }
 }
-impl<'a, 'b, T, const N: usize, const MP: usize, const MC: usize> Future
-    for Recv<'a, 'b, T, N, MP, MC>
-{
+impl<'a, 'b, T, const N: usize, const MC: usize> Future for Recv<'a, 'b, T, N, MC> {
     type Output = T;
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         match self.poll_next(cx) {
@@ -63,20 +57,18 @@ impl<'a, 'b, T, const N: usize, const MP: usize, const MC: usize> Future
     }
 }
 
-pub struct Publisher<T, const N: usize, const MP: usize, const MC: usize> {
+pub struct Publisher<T, const N: usize, const MC: usize> {
     ch: ach::Publisher<T, N, MC>,
-    consumer: Notify<MP>,
     producer: Notify<MC>,
 }
-impl<T, const N: usize, const MP: usize, const MC: usize> Publisher<T, N, MP, MC> {
+impl<T, const N: usize, const MC: usize> Publisher<T, N, MC> {
     pub const fn new(strict: bool) -> Self {
         Self {
             ch: ach::Publisher::new(strict),
-            consumer: Notify::new(),
             producer: Notify::new(),
         }
     }
-    pub fn subscribe(&self) -> Option<Subscriber<T, N, MP, MC>> {
+    pub fn subscribe(&self) -> Option<Subscriber<T, N, MC>> {
         if let Some(sub) = self.ch.subscribe() {
             Some(Subscriber {
                 parent: self,
@@ -87,7 +79,7 @@ impl<T, const N: usize, const MP: usize, const MC: usize> Publisher<T, N, MP, MC
         }
     }
 }
-impl<T: Clone, const N: usize, const MP: usize, const MC: usize> Publisher<T, N, MP, MC> {
+impl<T: Clone, const N: usize, const MC: usize> Publisher<T, N, MC> {
     /// return success times
     ///
     /// Notice: `Spin` if strict

@@ -23,14 +23,18 @@ impl<const W: usize> Notify<W> {
         self.permit.fetch_add(1, SeqCst);
         self.wakers.wake_one();
     }
-    pub fn notify_waiters(&self) {
+    pub fn notify_waiters(&self) -> usize {
+        let mut num = 0;
         loop {
             self.permit.fetch_add(1, SeqCst);
             if !self.wakers.wake_one() {
                 self.get_permit();
                 break;
+            } else {
+                num += 1;
             }
         }
+        num
     }
     /// Had been notified
     pub fn had_notified(&self) -> bool {
@@ -54,26 +58,34 @@ pub struct Listener<'a, const W: usize> {
     parent: &'a Notify<W>,
     token: Option<WakerToken<'a, (), W>>,
 }
+impl<'a, const W: usize> Listener<'a, W> {
+    pub fn pendable(&mut self) -> bool {
+        if let Some(_) = &self.token {
+            true
+        } else if let Ok(token) = self.parent.wakers.register() {
+            self.token = Some(token);
+            true
+        } else {
+            false
+        }
+    }
+}
 impl<'a, const W: usize> Stream for Listener<'a, W> {
     type Item = ();
     fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
+        let waker = cx.waker();
+        if self.pendable() {
+            self.token
+                .as_ref()
+                .unwrap()
+                .swap(WakerEntity::new(waker.clone(), ()));
+        } else {
+            waker.wake_by_ref();
+        }
         if self.parent.get_permit() {
             Poll::Ready(Some(()))
         } else {
-            let waker = cx.waker();
-            if let Some(token) = &self.token {
-                token.swap(WakerEntity::new(waker.clone(), ()));
-            } else if let Ok(token) = self.parent.wakers.register() {
-                token.swap(WakerEntity::new(waker.clone(), ()));
-                self.token = Some(token);
-            } else {
-                waker.wake_by_ref();
-            }
-            if self.parent.get_permit() {
-                Poll::Ready(Some(()))
-            } else {
-                Poll::Pending
-            }
+            Poll::Pending
         }
     }
 }
