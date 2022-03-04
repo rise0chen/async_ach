@@ -52,6 +52,9 @@ impl<T, const MP: usize, const MC: usize> Cell<T, MP, MC> {
     }
 }
 impl<T: Unpin, const MP: usize, const MC: usize> Cell<T, MP, MC> {
+    pub unsafe fn peek(&self) -> &T {
+        self.val.peek()
+    }
     /// Tries to get a reference to the value of the Cell.
     ///
     /// Returns Err if the cell is uninitialized or in critical section.
@@ -205,13 +208,14 @@ impl<'a, T: Unpin, const MP: usize, const MC: usize> Future for Replace<'a, T, M
         match self.parent.try_replace(val) {
             Ok(v) => Poll::Ready(v),
             Err(err) => {
-                self.val = Some(err.input);
-                if Pin::new(&mut self.wait_p).poll(cx).is_ready()
-                    || Pin::new(&mut self.wait_c).poll(cx).is_ready()
-                {
-                    self.poll(cx)
-                } else {
-                    Poll::Pending
+                let _ = Pin::new(&mut self.wait_p).poll(cx);
+                let _ = Pin::new(&mut self.wait_c).poll(cx);
+                match self.parent.try_replace(err.input) {
+                    Ok(v) => Poll::Ready(v),
+                    Err(err) => {
+                        self.val = Some(err.input);
+                        Poll::Pending
+                    }
                 }
             }
         }
