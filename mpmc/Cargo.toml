@@ -8,7 +8,11 @@ license-file = "LICENSE"
 name = "async_ach-mpmc"
 readme = "./README.md"
 repository = "https://github.com/rise0chen/async_ach.git"
-version = "0.1.0"
+version = "0.1.1"
+
+[features]
+alloc = []
+default = []
 
 [dependencies]
 ach-util = "0.1"

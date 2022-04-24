@@ -8,7 +8,11 @@ license-file = "LICENSE"
 name = "async_ach-spsc"
 readme = "./README.md"
 repository = "https://github.com/rise0chen/async_ach.git"
-version = "0.1.2"
+version = "0.1.3"
+
+[features]
+alloc = []
+default = []
 
 [dependencies]
 ach-spsc = "0.1"
