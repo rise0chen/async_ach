@@ -2,6 +2,7 @@ use crate::heapless::Mpmc;
 use ach_util::Error;
 use alloc::sync::Arc;
 
+#[derive(Clone)]
 pub struct Sender<T: Unpin, const N: usize, const MP: usize, const MC: usize> {
     tx: Arc<Mpmc<T, N, MP, MC>>,
 }
@@ -14,6 +15,7 @@ impl<T: Unpin, const N: usize, const MP: usize, const MC: usize> Sender<T, N, MP
     }
 }
 
+#[derive(Clone)]
 pub struct Receiver<T: Unpin, const N: usize, const MP: usize, const MC: usize> {
     rx: Arc<Mpmc<T, N, MP, MC>>,
 }
