@@ -8,7 +8,7 @@ license-file = "LICENSE"
 name = "async_ach"
 readme = "./README.md"
 repository = "https://github.com/rise0chen/async_ach.git"
-version = "0.1.1"
+version = "0.1.2"
 
 [features]
 alloc = ["async_ach-spsc/alloc", "async_ach-mpmc/alloc"]

@@ -10,7 +10,7 @@ impl<T: Unpin, const N: usize, const MP: usize, const MC: usize> Sender<T, N, MP
     pub fn try_send(&self, val: T) -> Result<(), Error<T>> {
         self.tx.sender().try_send(val)
     }
-    pub async fn send(&self, mut val: T) {
+    pub async fn send(&self, val: T) {
         self.tx.sender().send(val).await
     }
 }

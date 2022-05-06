@@ -8,7 +8,7 @@ impl<T: Unpin, const N: usize> Sender<T, N> {
     pub fn try_send(&mut self, val: T) -> Result<(), T> {
         self.tx.take_sender().unwrap().try_send(val)
     }
-    pub async fn send(&mut self, mut val: T) {
+    pub async fn send(&mut self, val: T) {
         self.tx.take_sender().unwrap().send(val).await
     }
 }

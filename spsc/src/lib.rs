@@ -3,10 +3,9 @@
 extern crate alloc;
 
 #[cfg(feature = "alloc")]
-mod heap;
-mod heapless;
+pub mod heap;
+pub mod heapless;
 
 #[cfg(feature = "alloc")]
 pub use heap::*;
-#[cfg(not(feature = "alloc"))]
 pub use heapless::*;
