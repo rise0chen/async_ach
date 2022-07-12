@@ -8,7 +8,7 @@ license-file = "LICENSE"
 name = "async_ach-waker"
 readme = "./README.md"
 repository = "https://github.com/rise0chen/async_ach.git"
-version = "0.1.3"
+version = "0.1.4"
 
 [dependencies]
 ach-array = "0.1"
