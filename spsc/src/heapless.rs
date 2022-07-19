@@ -39,7 +39,7 @@ pub struct Sender<'a, T: Unpin, const N: usize> {
 }
 impl<'a, T: Unpin, const N: usize> Sender<'a, T, N> {
     pub fn try_send(&mut self, val: T) -> Result<(), T> {
-        self.sender.send(val).map(|_| {
+        self.sender.try_send(val).map(|_| {
             self.parent.producer.notify_one();
         })
     }
@@ -62,7 +62,7 @@ pub struct Receiver<'a, T, const N: usize> {
 }
 impl<'a, T: Unpin, const N: usize> Receiver<'a, T, N> {
     pub fn try_recv(&mut self) -> Option<T> {
-        self.recver.recv().map(|v| {
+        self.recver.try_recv().map(|v| {
             self.parent.consumer.notify_one();
             v
         })

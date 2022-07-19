@@ -8,16 +8,17 @@ license-file = "LICENSE"
 name = "async_ach"
 readme = "./README.md"
 repository = "https://github.com/rise0chen/async_ach.git"
-version = "0.1.2"
+version = "0.2.0"
 
 [features]
 alloc = ["async_ach-spsc/alloc", "async_ach-mpmc/alloc"]
 
 [dependencies]
-async_ach-cell = {version = "0.1", path = "../cell"}
-async_ach-mpmc = {version = "0.1", path = "../mpmc"}
-async_ach-notify = {version = "0.1", path = "../notify"}
-async_ach-ring = {version = "0.1", path = "../ring"}
-async_ach-spsc = {version = "0.1", path = "../spsc"}
-async_ach-waker = {version = "0.1", path = "../waker"}
-async_ach-watch = {version = "0.1", path = "../watch"}
+async_ach-cell = {version = "0.1"}
+async_ach-mpmc = {version = "0.1"}
+async_ach-notify = {version = "0.1"}
+async_ach-pubsub = {version = "0.2"}
+async_ach-ring = {version = "0.1"}
+async_ach-spsc = {version = "0.2"}
+async_ach-waker = {version = "0.1"}
+async_ach-watch = {version = "0.1"}

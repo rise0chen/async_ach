@@ -8,10 +8,14 @@ license-file = "LICENSE"
 name = "async_ach-pubsub"
 readme = "./README.md"
 repository = "https://github.com/rise0chen/async_ach.git"
-version = "0.1.2"
+version = "0.2.0"
+
+[features]
+alloc = ["ach-pubsub/alloc"]
+default = []
 
 [dependencies]
-ach-pubsub = "0.1"
+ach-pubsub = "0.2"
 ach-util = "0.1"
 async_ach-notify = {version = "0.1", path = "../notify"}
 futures-util = {version = "0.3", default-features = false}
