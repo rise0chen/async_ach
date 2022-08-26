@@ -1,5 +1,7 @@
 #![no_std]
 
-mod pool;
+mod entity;
+pub mod list;
+pub mod pool;
 
-pub use pool::{WakerEntity, WakerPool, WakerToken};
+pub use entity::WakerEntity;

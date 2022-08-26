@@ -1,6 +1,6 @@
+use crate::WakerEntity;
 use ach_array::Array;
 use core::sync::atomic::{AtomicBool, Ordering};
-use core::task::Waker;
 
 pub struct WakerToken<'a, T, const N: usize> {
     pool: &'a WakerPool<T, N>,
@@ -12,7 +12,7 @@ impl<'a, T, const N: usize> WakerToken<'a, T, N> {
     /// wake it immediately, if is waking.
     pub fn swap(&self, waker: WakerEntity<T>) {
         if let Err(e) = self.pool.pool[self.index].try_replace(waker) {
-            e.input.waker.wake();
+            e.input.wake();
         }
     }
 }
@@ -27,16 +27,6 @@ impl<'a, T, const N: usize> Drop for WakerToken<'a, T, N> {
             Ordering::SeqCst,
             Ordering::Relaxed,
         );
-    }
-}
-
-pub struct WakerEntity<T> {
-    pub waker: Waker,
-    pub val: T,
-}
-impl<T> WakerEntity<T> {
-    pub fn new(waker: Waker, val: T) -> WakerEntity<T> {
-        WakerEntity { waker, val }
     }
 }
 
@@ -71,11 +61,14 @@ impl<T, const N: usize> WakerPool<T, N> {
     ///
     /// Returns false if the pool is empty.
     pub fn wake_one(&self) -> bool {
-        if let Some(waker) = self.pool.pop() {
-            waker.waker.wake();
-            true
-        } else {
-            false
+        loop {
+            if let Some(waker) = self.pool.pop() {
+                if waker.wake() {
+                    return true;
+                }
+            } else {
+                return false;
+            }
         }
     }
     /// Wake all waiter, and remove it.
@@ -84,7 +77,7 @@ impl<T, const N: usize> WakerPool<T, N> {
     pub fn wake_all(&self) -> usize {
         let mut num = 0;
         while let Some(waker) = self.pool.pop() {
-            waker.waker.wake();
+            waker.wake();
             num += 1;
         }
         num
