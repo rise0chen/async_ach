@@ -1,6 +1,7 @@
 #![no_std]
 
-use async_ach_waker::{WakerEntity, WakerPool, WakerToken};
+use async_ach_waker::pool::{WakerPool, WakerToken};
+use async_ach_waker::WakerEntity;
 use core::future::Future;
 use core::pin::Pin;
 use core::sync::atomic::{AtomicUsize, Ordering::SeqCst};

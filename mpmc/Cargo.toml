@@ -19,4 +19,15 @@ ach-util = "0.1"
 async_ach-ring = {version = "0.1", path = "../ring"}
 
 [dev-dependencies]
+async-channel = "1"
+criterion = {version = "0", features = ["async_futures"]}
+flume = "0"
+futures-channel = "0"
+futures-executor = "0"
 futures-test = "0"
+futures-util = "0"
+tokio = {version = "1", features = ["sync"]}
+
+[[bench]]
+harness = false
+name = "mpsc"

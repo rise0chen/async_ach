@@ -22,9 +22,9 @@ impl<'a, T, const MP: usize, const MC: usize> Drop for Ref<'a, T, MP, MC> {
     fn drop(&mut self) {
         if self.val.ref_num() == Ok(1) {
             if self.val.will_remove() {
-                self.parent.consumer.notify_waiters();
+                self.parent.consumer.notify_one();
             } else {
-                self.parent.producer.notify_waiters();
+                self.parent.producer.notify_one();
             }
         }
     }
@@ -78,7 +78,7 @@ impl<T: Unpin, const MP: usize, const MC: usize> Cell<T, MP, MC> {
     /// Returns Err if the value is refered, initialized or in critical section.
     pub fn try_set(&self, val: T) -> Result<(), Error<T>> {
         self.val.try_set(val).map(|x| {
-            self.producer.notify_waiters();
+            self.producer.notify_one();
             x
         })
     }
@@ -97,7 +97,7 @@ impl<T: Unpin, const MP: usize, const MC: usize> Cell<T, MP, MC> {
     /// Returns Err if the cell is refered or in critical section.
     pub fn try_take(&self) -> Result<Option<T>, Error<()>> {
         self.val.try_take().map(|x| {
-            self.consumer.notify_waiters();
+            self.consumer.notify_one();
             x
         })
     }
@@ -114,7 +114,7 @@ impl<T: Unpin, const MP: usize, const MC: usize> Cell<T, MP, MC> {
     /// Returns Err if the value is refered or in critical section.
     pub fn try_replace(&self, val: T) -> Result<Option<T>, Error<T>> {
         self.val.try_replace(val).map(|x| {
-            self.producer.notify_waiters();
+            self.producer.notify_one();
             x
         })
     }
