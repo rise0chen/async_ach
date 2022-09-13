@@ -8,7 +8,7 @@ license-file = "LICENSE"
 name = "async_ach-notify"
 readme = "./README.md"
 repository = "https://github.com/rise0chen/async_ach.git"
-version = "0.1.5"
+version = "0.1.6"
 
 [dependencies]
 async_ach-waker = {version = "0.2", path = "../waker"}
