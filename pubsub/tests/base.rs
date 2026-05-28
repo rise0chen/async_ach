@@ -1,4 +1,4 @@
-use async_ach_pubsub::Publisher;
+use async_ach_pubsub::heapless::Publisher;
 use core::sync::atomic::{AtomicUsize, Ordering::SeqCst};
 use core::time::Duration;
 use futures_executor::ThreadPool;

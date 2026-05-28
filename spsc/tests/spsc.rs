@@ -1,4 +1,4 @@
-use async_ach_spsc::Spsc;
+use async_ach_spsc::heapless::Spsc;
 use core::ops::Range;
 use core::time::Duration;
 use futures_executor::ThreadPool;

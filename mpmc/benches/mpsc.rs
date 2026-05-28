@@ -1,7 +1,4 @@
-#[macro_use]
-extern crate criterion;
-
-use criterion::Criterion;
+use criterion::{criterion_group, criterion_main, Criterion};
 use futures_util::sink::SinkExt as _;
 use futures_util::stream::StreamExt as _;
 use std::sync::Arc;
@@ -38,12 +35,13 @@ impl TestMpsc {
             })
         });
     }
-    #[cfg(feature = "alloc")]
     fn ach_heap(c: &mut Criterion) {
+        #[cfg(feature = "alloc")]
         c.bench_function("ach_heap", |b| {
             use async_ach_mpmc::heap as mpsc;
             b.iter(|| {
-                let (tx,rx) = mpsc::channel::<usize, { Self::SENDER_NUM }, { Self::SENDER_NUM }, 1>();
+                let (tx, rx) =
+                    mpsc::channel::<usize, { Self::SENDER_NUM }, { Self::SENDER_NUM }, 1>();
                 let ch = Arc::new(tx);
                 thread::scope(|scope| {
                     for _ in 0..Self::SENDER_NUM {

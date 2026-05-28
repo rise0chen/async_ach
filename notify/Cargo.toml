@@ -1,14 +1,14 @@
 [package]
-authors = ["rise0chen <rise0chen@163.com>"]
-categories = ["concurrency"]
-description = "Async Atomic Channel"
-edition = "2018"
-keywords = ["atomic", "channel", "no-heap"]
-license-file = "LICENSE"
+authors.workspace = true
+categories.workspace = true
+description.workspace = true
+edition.workspace = true
+keywords.workspace = true
+license-file.workspace = true
 name = "async_ach-notify"
-readme = "./README.md"
-repository = "https://github.com/rise0chen/async_ach.git"
-version = "0.1.6"
+readme.workspace = true
+repository.workspace = true
+version.workspace = true
 
 [dependencies]
 async_ach-waker = {version = "0.2", path = "../waker"}
@@ -18,7 +18,7 @@ futures-util = {version = "0.3", default-features = false}
 ach-ring = "0.1"
 ach-util = "0.1"
 criterion = {version = "0", features = ["async_futures"]}
-event-listener = "2"
+event-listener = "5"
 futures-executor = {version = "0", features = ["thread-pool"]}
 futures-test = "0"
 futures-util = "0"

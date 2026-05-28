@@ -21,27 +21,30 @@ impl<T, const N: usize, const MP: usize, const MC: usize> Ring<T, N, MP, MC> {
     pub fn len(&self) -> usize {
         self.buf.len()
     }
+    pub fn is_empty(&self) -> bool {
+        self.buf.is_empty()
+    }
+}
+impl<T, const N: usize, const MP: usize, const MC: usize> Default for Ring<T, N, MP, MC> {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 impl<T: Unpin, const N: usize, const MP: usize, const MC: usize> Ring<T, N, MP, MC> {
     /// Appends an element to the back of the Ring.
     ///
     /// Returns Err if the Ring is full or in critical section.
     pub fn try_push(&self, val: T) -> Result<(), Error<T>> {
-        self.buf.push(val).map(|x| {
+        self.buf.push(val).inspect(|_x| {
             self.producer.notify_one();
-            x
         })
     }
     /// Appends an element to the back of the Ring.
     pub async fn push(&self, mut val: T) {
         let mut wait_c = self.consumer.listen();
-        loop {
-            if let Err(err) = self.try_push(val) {
-                val = err.input;
-                wait_c.next().await;
-            } else {
-                break;
-            }
+        while let Err(err) = self.try_push(val) {
+            val = err.input;
+            wait_c.next().await;
         }
     }
 
@@ -49,9 +52,8 @@ impl<T: Unpin, const N: usize, const MP: usize, const MC: usize> Ring<T, N, MP, 
     ///
     /// Returns Err if the Ring is empty or in critical section.
     pub fn try_pop(&self) -> Result<T, Error<()>> {
-        self.buf.pop().map(|x| {
+        self.buf.pop().inspect(|_x| {
             self.consumer.notify_one();
-            x
         })
     }
     /// Removes the first element and returns it.

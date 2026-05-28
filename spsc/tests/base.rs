@@ -1,4 +1,4 @@
-use async_ach_spsc::Spsc;
+use async_ach_spsc::heapless::Spsc;
 use core::future::Future;
 use core::pin::Pin;
 use core::task::Poll;

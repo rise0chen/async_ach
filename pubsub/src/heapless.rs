@@ -65,7 +65,7 @@ impl<T, const N: usize, const MC: usize> Publisher<T, N, MC> {
             producer: Notify::new(),
         }
     }
-    pub fn subscribe(&self) -> Option<Subscriber<T, N, MC>> {
+    pub fn subscribe(&'_ self) -> Option<Subscriber<'_, T, N, MC>> {
         if let Some(sub) = self.ch.subscribe() {
             Some(Subscriber {
                 parent: self,

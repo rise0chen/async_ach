@@ -19,27 +19,21 @@ impl<T, const N: usize, const MP: usize, const MC: usize> Ring<T, N, MP, MC> {
 }
 impl<T: Unpin, const N: usize, const MP: usize, const MC: usize> Ring<T, N, MP, MC> {
     pub fn try_push(&self, val: T) -> Result<(), Error<T>> {
-        self.buf.push(val).map(|x| {
+        self.buf.push(val).inspect(|_x| {
             self.producer.notify_one();
-            x
         })
     }
     pub async fn push(&self, mut val: T) {
         let mut wait_c = self.consumer.listen();
-        loop {
-            if let Err(err) = self.try_push(val) {
-                val = err.input;
-                wait_c.next().await;
-            } else {
-                break;
-            }
+        while let Err(err) = self.try_push(val) {
+            val = err.input;
+            wait_c.next().await;
         }
     }
 
     pub fn try_pop(&self) -> Result<T, Error<()>> {
-        self.buf.pop().map(|x| {
+        self.buf.pop().inspect(|_x| {
             self.consumer.notify_one();
-            x
         })
     }
     pub async fn pop(&self) -> T {
