@@ -15,7 +15,7 @@ alloc = []
 default = []
 
 [dependencies]
-ach-util = "0.1"
+ach-util = "0.2"
 async_ach-ring = {version = "0.2", path = "../ring"}
 
 [dev-dependencies]

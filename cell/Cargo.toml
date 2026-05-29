@@ -11,8 +11,8 @@ repository.workspace = true
 version.workspace = true
 
 [dependencies]
-ach-cell = "0.1"
-ach-util = "0.1"
+ach-cell = "0.2"
+ach-util = "0.2"
 async_ach-notify = {version = "0.2", path = "../notify"}
 
 [dev-dependencies]

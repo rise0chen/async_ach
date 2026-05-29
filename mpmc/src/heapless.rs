@@ -51,10 +51,10 @@ impl<T, const N: usize, const MP: usize, const MC: usize> Mpmc<T, N, MP, MC> {
     pub const fn new() -> Self {
         Self { ring: Ring::new() }
     }
-    pub const fn sender(&self) -> Sender<T, N, MP, MC> {
+    pub const fn sender(&'_ self) -> Sender<'_, T, N, MP, MC> {
         Sender::new(self)
     }
-    pub const fn recver(&self) -> Receiver<T, N, MP, MC> {
+    pub const fn recver(&'_ self) -> Receiver<'_, T, N, MP, MC> {
         Receiver::new(self)
     }
 }

@@ -15,8 +15,8 @@ async_ach-waker = {version = "0.2", path = "../waker"}
 futures-util = {version = "0.3", default-features = false}
 
 [dev-dependencies]
-ach-ring = "0.1"
-ach-util = "0.1"
+ach-ring = "0.2"
+ach-util = "0.2"
 criterion = {version = "0", features = ["async_futures"]}
 event-listener = "5"
 futures-executor = {version = "0", features = ["thread-pool"]}

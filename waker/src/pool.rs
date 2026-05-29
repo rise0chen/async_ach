@@ -35,15 +35,14 @@ pub struct WakerPool<T, const N: usize> {
     used: [AtomicBool; N],
 }
 impl<T, const N: usize> WakerPool<T, N> {
-    const FALSE: AtomicBool = AtomicBool::new(false);
     pub const fn new() -> Self {
         Self {
             pool: Array::new(),
-            used: [Self::FALSE; N],
+            used: [const { AtomicBool::new(false) }; N],
         }
     }
     /// Hold a place in the pool
-    pub fn register(&self) -> Result<WakerToken<T, N>, ()> {
+    pub fn register(&'_ self) -> Result<WakerToken<'_, T, N>, ()> {
         for (i, used) in self.used.iter().enumerate() {
             if used
                 .compare_exchange(false, true, Ordering::SeqCst, Ordering::Relaxed)
